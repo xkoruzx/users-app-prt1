@@ -1,19 +1,23 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { ExpressAdapter } from '@nestjs/platform-express';
+import express from 'express';
+import serverless from 'serverless-http';
+
+let app;
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const server = express();
+  app = await NestFactory.create(AppModule, new ExpressAdapter(server));
   app.enableCors();
   await app.listen(3000);
 }
 
 bootstrap();
 
-// Export serverless handler for Vercel
-export default async function (req, res) {
-  const app = await NestFactory.create(AppModule);
-  app.enableCors();
-
-  // Manually handle the request using NestJS
-  return app.getHttpAdapter().getInstance().handle(req, res);
-}
+export const handler = async (event: any, context: any) => {
+  if (!app) {
+    await bootstrap(); // Ensure the app is initialized before handling requests
+  }
+  return serverless(app)(event, context); // Handle serverless requests
+};

@@ -1,0 +1,8 @@
+[build]
+  functions = "dist/functions"
+  publish = "dist"
+
+[[redirects]]
+  from = "/(.*)"
+  to = "/.netlify/functions/server/$1"
+  status = 200
